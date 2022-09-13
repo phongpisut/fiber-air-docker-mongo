@@ -16,5 +16,7 @@ func UserRoute(app *fiber.App) {
 func AdminRoute(app *fiber.App) {
 	app.Get("/getSetting", controllers.GetSetting)
 	app.Put("/editSetting/:id", controllers.EditSetting)
+	app.Put("/editUser/:id", controllers.EditUser)
 	app.Delete("/removeUser/:userId", controllers.DeleteAUser)
+
 }

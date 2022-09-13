@@ -4,6 +4,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type User struct {
 	Id      primitive.ObjectID `json:"id,omitempty"`
+	Seat    int                `json:"seat,omitempty" validate:"required"`
 	Name    string             `json:"name,omitempty" validate:"required"`
 	Surname string             `json:"surname,omitempty"`
 	Tel     string             `json:"tel,omitempty" validate:"required"`

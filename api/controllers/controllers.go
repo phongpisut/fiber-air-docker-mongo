@@ -35,6 +35,7 @@ func CreateUser(c *fiber.Ctx) error {
 
 	newUser := models.User{
 		Id:      primitive.NewObjectID(),
+		Seat:    user.Seat,
 		Name:    user.Name,
 		Surname: user.Surname,
 		Tel:     user.Tel,
@@ -208,4 +209,42 @@ func EditSetting(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusOK).JSON(responses.Response{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"data": updatedMaximum}})
+}
+
+func EditUser(c *fiber.Ctx) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	id := c.Params("id")
+	var user models.User
+	defer cancel()
+
+	objId, _ := primitive.ObjectIDFromHex(id)
+
+	//validate the request body
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(http.StatusBadRequest).JSON(responses.Response{Status: http.StatusBadRequest, Message: "error", Data: &fiber.Map{"data": err.Error()}})
+	}
+
+	//use the validator library to validate required fields
+	if validationErr := validate.Struct(&user); validationErr != nil {
+		return c.Status(http.StatusBadRequest).JSON(responses.Response{Status: http.StatusBadRequest, Message: "error", Data: &fiber.Map{"data": validationErr.Error()}})
+	}
+
+	update := bson.M{"name": user.Name, "surname": user.Surname, "tel": user.Tel, "seat": user.Seat}
+
+	result, err := userCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(responses.Response{Status: http.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})
+	}
+	//get updated user details
+	var updatedUser models.User
+	if result.MatchedCount == 1 {
+		err := userCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&updatedUser)
+
+		if err != nil {
+			return c.Status(http.StatusInternalServerError).JSON(responses.Response{Status: http.StatusInternalServerError, Message: "error", Data: &fiber.Map{"data": err.Error()}})
+		}
+	}
+
+	return c.Status(http.StatusOK).JSON(responses.Response{Status: http.StatusOK, Message: "success", Data: &fiber.Map{"users": updatedUser}})
 }
