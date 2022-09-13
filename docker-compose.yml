@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  api:
+    build:
+      context: .
+      dockerfile: .DockerFile
+    container_name: fiber_api
+    env_file:
+      - .env
+    volumes:
+      - './api:/app'
+    working_dir: /app
+    ports:
+      - "6220:6220"
+
+
